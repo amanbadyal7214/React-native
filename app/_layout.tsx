@@ -1,29 +1,17 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
 
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { createDrawerNavigator } from '@react-navigation/drawer';
+import { withLayoutContext } from 'expo-router';
 
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
+const DrawerNavigator = createDrawerNavigator();
+const Drawer = withLayoutContext(DrawerNavigator.Navigator);
 
-  if (!loaded) {
-    // Async font loading only occurs in development.
-    return null;
-  }
-
+export default function DrawerLayout() {
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    
+    <Drawer>
+      <Drawer.Screen name="Add/index" options={{ title: 'Add Employee'  }} />
+      <Drawer.Screen name="Employee/index" options={{ title: 'View Employee' }} />
+    </Drawer>
   );
 }
+
