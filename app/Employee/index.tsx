@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, FlatList, TextInput, StyleSheet, TouchableOpacity,
-  Image, Modal
+  Image, Alert
 } from 'react-native';
 import { Ionicons, FontAwesome } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import list from '../../assets/list.json';
+import axios from 'axios';
+import EmployeeDetailModal from '../../Components/EmployeeDetailModal';
 
 type Employee = {
   id: number;
   name: string;
-  department: string;
   avatar?: string;
+  department: string;
   designation: string;
   employee: string;
   email: string;
@@ -29,29 +29,50 @@ type Employee = {
 
 export default function ViewEmployeesScreen() {
   const [search, setSearch] = useState('');
+  const [imageVisible, setImageVisible] = useState(false);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
 
-  useEffect(() => {
-    const loadEmployees = async () => {
-      try {
-        const json = await AsyncStorage.getItem('@employee_list');
-        const stored: Employee[] = json ? JSON.parse(json) : [];
-        const merged = [...list, ...stored]; // Combine dummy + saved
-        setEmployees(merged);
-      } catch (err) {
-        console.error('Failed to load employees:', err);
-        setEmployees(list); // fallback
-      }
-    };
+  const loadEmployees = async () => {
+    try {
+      const response = await axios.get('https://project.pisofterp.com/pipl/restworld/employees');
+      const rawData = response.data;
 
+      const transformed = rawData.map((emp: any): Employee => ({
+        id: emp.id,
+        name: emp.employeeName,
+        avatar: emp.employeePic ? `data:image/jpeg;base64,${emp.employeePic}` : undefined,
+        department: emp.department || '',
+        designation: emp.designation || '',
+        employee: emp.employee || '',
+        email: emp.email || '',
+        phone: emp.phone || '',
+        Gender: emp.gender || '',
+        Category: emp.category || '',
+        Age: emp.age || 0,
+        spouse: emp.spouse || '',
+        child: emp.child || '',
+        education: emp.education || '',
+        Experience: emp.experience || '',
+        Address: emp.address || '',
+        Pincode: emp.pincode || '',
+      }));
+
+      setEmployees(transformed);
+    } catch (err) {
+      console.error('Load error:', err);
+      Alert.alert('Error', 'Could not load employee data.');
+    }
+  };
+
+  useEffect(() => {
     loadEmployees();
   }, []);
 
   const filtered = employees.filter((emp) =>
-    emp.name.toLowerCase().includes(search.toLowerCase()) ||
-    emp.department.toLowerCase().includes(search.toLowerCase())
+    emp.name?.toLowerCase().includes(search.toLowerCase()) ||
+    emp.department?.toLowerCase().includes(search.toLowerCase())
   );
 
   const renderItem = ({ item, index }: { item: Employee; index: number }) => (
@@ -72,19 +93,14 @@ export default function ViewEmployeesScreen() {
         <Text style={styles.name}>{item.name}</Text>
         <Text style={styles.department}>{item.department}</Text>
       </View>
-      <TouchableOpacity style={styles.editButton}>
-        <FontAwesome name="edit" size={18} color="green" />
-      </TouchableOpacity>
+      <FontAwesome name="edit" size={18} color="green" style={styles.iconButton} />
     </TouchableOpacity>
   );
 
   return (
     <View style={styles.container}>
-      <View>
-        <Text style={styles.header}>View</Text>
-        <Text style={{ color: 'green', fontSize: 30 }}> Employees </Text>
-      </View>
-
+      <Text style={styles.header}>View</Text>
+      <Text style={{ color: 'green', fontSize: 30 }}>Employees</Text>
       <Text style={{ fontSize: 8, marginLeft: 10 }}>
         Search for the employee in the Search Bar!
       </Text>
@@ -99,62 +115,26 @@ export default function ViewEmployeesScreen() {
         />
       </View>
 
-      <FlatList
-        data={filtered}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={renderItem}
-        showsVerticalScrollIndicator={false}
-      />
+      {filtered.length === 0 ? (
+        <Text style={{ textAlign: 'center', marginTop: 20, color: 'gray' }}>
+          No employees found
+        </Text>
+      ) : (
+        <FlatList
+          data={filtered}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={renderItem}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
 
-      <Modal
+      <EmployeeDetailModal
         visible={modalVisible}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            {selectedEmployee && (
-              <>
-                <View style={styles.img}>
-                  {selectedEmployee.avatar ? (
-                    <Image source={{ uri: selectedEmployee.avatar }} style={styles.modalAvatar} />
-                  ) : (
-                    <FontAwesome name="user-circle" size={60} color="#ccc" />
-                  )}
-                  <Text style={styles.Name}>{selectedEmployee.name}</Text>
-                </View>
-                {[
-                  ['Department', selectedEmployee.department],
-                  ['Designation', selectedEmployee.designation],
-                  ['Employee', selectedEmployee.employee],
-                  ['Email', selectedEmployee.email],
-                  ['Phone', selectedEmployee.phone],
-                  ['Gender', selectedEmployee.Gender],
-                  ['Category', selectedEmployee.Category],
-                  ['Age', selectedEmployee.Age],
-                  ['Spouse', selectedEmployee.spouse],
-                  ['Child', selectedEmployee.child],
-                  ['Education', selectedEmployee.education],
-                  ['Experience', selectedEmployee.Experience],
-                  ['Address', selectedEmployee.Address],
-                  ['Pincode', selectedEmployee.Pincode],
-                ].map(([label, value], i) => (
-                  <View style={styles.rowBetween} key={i}>
-                    <Text style={styles.modalText}>{label}:</Text>
-                    <Text style={styles.modalRed}>{value}</Text>
-                  </View>
-                ))}
-              </>
-            )}
-            <View style={styles.center}>
-              <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeButton}>
-                <Text style={{ color: 'white' }}>Close</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+        onClose={() => setModalVisible(false)}
+        employee={selectedEmployee}
+        imageVisible={imageVisible}
+        setImageVisible={setImageVisible}
+      />
     </View>
   );
 }
@@ -179,83 +159,10 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0.5,
     paddingVertical: 12,
   },
-  Number: {
-     width: 20,
-     textAlign: 'center',
-      color: '#888'
-     },
-  img: {
-     justifyContent: 'center', 
-     alignItems: 'center' 
-    },
-  Image: {
-     width: 35,
-      height: 35,
-       borderRadius: 20,
-        marginLeft: 30 
-      },
-  info: { flex: 1,
-     alignItems: 'center',
-      justifyContent: 'center'
-     },
-  name: { 
-    fontWeight: '600',
-     fontSize: 16 
-    },
-  department: {
-     fontSize: 12,
-      color: 'green'
-     },
-  editButton: { 
-    padding: 6 
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  center: { justifyContent: 'center', alignItems: 'center' },
-  Name: { marginBottom: 40 },
-  modalContent: {
-    width: 300,
-    backgroundColor: 'white',
-    borderRadius: 20,
-    padding: 10,
-    elevation: 10,
-  },
-  rowBetween: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginVertical: 2,
-  },
-  modalText: {
-    fontSize: 14,
-    marginVertical: 4,
-    color: 'gray',
-    flex: 1,
-  },
-  modalRed: {
-    fontSize: 14,
-    flex: 1,
-    textAlign: 'right',
-    color: 'gray',
-  },
-  modalAvatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    marginVertical: 10,
-  },
-  closeButton: {
-    marginTop: 20,
-    backgroundColor: 'green',
-    paddingVertical: 8,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-    width: 80,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  Number: { width: 20, textAlign: 'center', color: '#888' },
+  Image: { width: 35, height: 35, borderRadius: 20, marginLeft: 30 },
+  info: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  name: { fontWeight: '600', fontSize: 16 },
+  department: { fontSize: 12, color: 'green' },
+  iconButton: { padding: 6, marginRight: 10 },
 });
-

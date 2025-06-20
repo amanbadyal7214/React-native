@@ -1,43 +1,62 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 
-export default function StepIndicator({ step }: { step: number }) {
+type StepIndicatorProps = {
+  step: number;
+  setStep: (n: number) => void;
+};
+
+export default function StepIndicator({ step, setStep }: StepIndicatorProps) {
   return (
     <View style={styles.container}>
-      <View style={styles.white}>
-        <View style={[styles.circle, step >= 1 && styles.activeCircle]}>
-          {step > 1 ? (
-            <FontAwesome name="check" size={16} color="white" />
-          ) : (
-            <Text style={styles.stepText}></Text>
-          )}
+      {/* Step 1 - Employee */}
+      <TouchableOpacity onPress={() => setStep(1)}>
+        <View style={styles.white}>
+          <View style={[styles.circle, step >= 1 && styles.activeCircle]}>
+            {step > 1 ? (
+              <FontAwesome name="check" size={16} color="white" />
+            ) : (
+              <Text style={styles.stepText}></Text>
+            )}
+          </View>
+          <Text style={[styles.label, step >= 1 && styles.activeLabel]}>
+            Employee
+          </Text>
         </View>
-        <Text style={[styles.label, step >= 1 && styles.activeLabel]}>Employee</Text>
-      </View>
+      </TouchableOpacity>
 
       <View style={[styles.line, step >= 2 && styles.activeLine]} />
 
-      
-      <View style={styles.white}>
-        <View style={[styles.circle, step >= 2 && styles.activeCircle]}>
-          {step > 2 ? (
-            <FontAwesome name="check" size={16} color="white" />
-          ) : (
-            <Text style={styles.stepText}></Text>
-          )}
+      {/* Step 2 - General */}
+      <TouchableOpacity onPress={() => setStep(2)}>
+        <View style={styles.white}>
+          <View style={[styles.circle, step >= 2 && styles.activeCircle]}>
+            {step > 2 ? (
+              <FontAwesome name="check" size={16} color="white" />
+            ) : (
+              <Text style={styles.stepText}></Text>
+            )}
+          </View>
+          <Text style={[styles.label, step >= 2 && styles.activeLabel]}>
+            General
+          </Text>
         </View>
-        <Text style={[styles.label, step >= 2 && styles.activeLabel]}>General</Text>
-      </View>
+      </TouchableOpacity>
 
       <View style={[styles.line, step >= 3 && styles.activeLine]} />
 
-      <View style={styles.white}>
-        <View style={[styles.circle, step === 3 && styles.activeCircle]}>
-          <Text style={styles.stepText}></Text>
+      {/* Step 3 - Address */}
+      <TouchableOpacity onPress={() => setStep(3)}>
+        <View style={styles.white}>
+          <View style={[styles.circle, step === 3 && styles.activeCircle]}>
+            <Text style={styles.stepText}></Text>
+          </View>
+          <Text style={[styles.label, step === 3 && styles.activeLabel]}>
+            Address
+          </Text>
         </View>
-        <Text style={[styles.label, step === 3 && styles.activeLabel]}>Address</Text>
-      </View>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -47,11 +66,11 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent:"center",
+    justifyContent: 'center',
   },
-  white:{
+  white: {
     alignItems: 'center',
-    justifyContent:"center",
+    justifyContent: 'center',
   },
   circle: {
     backgroundColor: '#ccc',
@@ -81,7 +100,7 @@ const styles = StyleSheet.create({
     width: 140,
     height: 2,
     backgroundColor: '#ccc',
-    marginBottom:15,
+    marginBottom: 15,
   },
   activeLine: {
     backgroundColor: '#4CAF50',

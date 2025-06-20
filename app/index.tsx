@@ -58,9 +58,8 @@ export default function EmployeeForm() {
 
   return (
     <ScrollView style={{ flex: 1, padding: 16, backgroundColor: 'white' }}>
-      <StepIndicator step={step} />
+      <StepIndicator step={step} setStep={setStep} />
 
-      {/* All steps stay mounted but only one is visible */}
       <View style={styles.stepContainer}>
         <View style={[styles.step, step !== 1 && styles.hidden]}>
           <StepOne
@@ -102,3 +101,4 @@ const styles = StyleSheet.create({
     display: 'none',
   },
 });
+

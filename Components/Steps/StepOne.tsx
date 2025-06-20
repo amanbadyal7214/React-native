@@ -9,24 +9,34 @@ import {
   StyleSheet,
   ScrollView,
 } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
+import axios from 'axios';
 
 export default function StepOne({ onNext, onBack, initialData = {} }: any) {
-  const isInitialized = useRef(false); // prevents re-initialization
+  const isInitialized = useRef(false);
 
   const [name, setName] = useState('');
-  const [department, setDepartment] = useState('');
-  const [designation, setDesignation] = useState('');
+  const [selectedDepartment, setSelectedDepartment] = useState('');
+  const [selectedDepartmentId, setSelectedDepartmentId] = useState('');
+  const [selectedDesignation, setSelectedDesignation] = useState('');
+  const [selectedDesignationId, setSelectedDesignationId] = useState('');
+  const [selectedsenior, setselectedsenior] = useState("")
+  const [selectedseniorid, setselectedseniorid] = useState("")
   const [employeeType, setEmployeeType] = useState('');
   const [avatar, setAvatar] = useState<string | null>(null);
 
+  const [departments, setDepartments] = useState([]);
+  const [designations, setDesignations] = useState([]);
+  const [seniors, setseniors] = useState([])
+
   useEffect(() => {
-    // Only initialize once
     if (!isInitialized.current && initialData) {
       setName(initialData.name || '');
-      setDepartment(initialData.department || '');
-      setDesignation(initialData.designation || '');
+      setSelectedDepartment(initialData.department || '');
+      setSelectedDesignation(initialData.designation || '');
+      setselectedsenior(initialData.senior || '');
       setEmployeeType(initialData.employeeType || '');
       setAvatar(initialData.avatar || null);
       isInitialized.current = true;
@@ -34,13 +44,45 @@ export default function StepOne({ onNext, onBack, initialData = {} }: any) {
   }, [initialData]);
 
   useEffect(() => {
-    (async () => {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permission Denied', 'Please allow access to the photo library');
+    const fetchDepartments = async () => {
+      try {
+        const deptRes = await axios.get(
+          'https://project.pisofterp.com/realestate/restworld/departments'
+        );
+        setDepartments(deptRes.data);
+      } catch (error) {
+        console.error('Dropdown fetch failed:', error);
+        Alert.alert('Error', 'Could not load departments.');
       }
-    })();
+    };
+
+    fetchDepartments();
   }, []);
+
+  const getDesignationByDepartmentId = async (departmentId: number) => {
+    try {
+      const desgRes = await axios.get(
+        `https://project.pisofterp.com/realestate/restworld/getDesignationByDepartmentId/${departmentId}`
+      );
+      console.log(desgRes.data)
+      setDesignations(desgRes.data);
+    } catch (error) {
+      console.error('Designation fetch failed:', error);
+      Alert.alert('Error', 'Could not load designations.');
+    }
+  };
+  const getseniorsId = async (designationId: number) => {
+    try {
+      const seniorRes = await axios.get(
+        `https://project.pisofterp.com/realestate/restworld/seniors/${designationId}`
+      );
+       console.log(seniorRes.data)
+      setseniors(seniorRes.data);
+    } catch (error) {
+      console.error('Designation fetch failed:', error);
+      Alert.alert('Error', 'Could not load designations.');
+    }
+  };
 
   const pickImage = async () => {
     try {
@@ -65,7 +107,17 @@ export default function StepOne({ onNext, onBack, initialData = {} }: any) {
       return;
     }
 
-    const form = { name, department, designation, employeeType, avatar };
+    const form = {
+      name,
+      department: selectedDepartment,
+      departmentId: selectedDepartmentId,
+      designation: selectedDesignation,
+      seniors:selectedsenior,
+      designationId: selectedDesignationId,
+      seniorId: selectedseniorid,
+      employeeType,
+      avatar,
+    };
     onNext(form);
   };
 
@@ -84,21 +136,107 @@ export default function StepOne({ onNext, onBack, initialData = {} }: any) {
         onChangeText={setName}
       />
 
-      <Text style={styles.label}>Department</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter department"
-        value={department}
-        onChangeText={setDepartment}
-      />
 
-      <Text style={styles.label}>Designation</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter designation"
-        value={designation}
-        onChangeText={setDesignation}
-      />
+
+
+
+      <Text style={styles.label}>Department</Text>
+      <View style={styles.picker}>
+        <Picker
+          selectedValue={selectedDepartment}
+          onValueChange={(value) => {
+            setSelectedDepartment(value);
+            setSelectedDesignation('');
+            setSelectedDesignationId('');
+            if(value === ""){
+                  setSelectedDepartment("");
+                  setSelectedDesignation("")
+                  setDesignations([]);
+                  return;
+                }
+            const dept = departments.find((d) => d.department === value);
+            if (dept) {
+              setSelectedDepartmentId(dept.id);
+              getDesignationByDepartmentId(dept.id);
+            } else {
+              setDesignations([]);
+            }
+          }}
+        >
+          <Picker.Item label="Select Department" value="" />
+          {departments.map((dept) => (
+            <Picker.Item
+              key={dept.id}
+              label={dept.department}
+              value={dept.department}
+            />
+          ))}
+        </Picker>
+      </View>
+
+
+
+
+
+      {selectedDepartment !== '' && (
+        <>
+          <Text style={styles.label}>Designation</Text>
+          <View style={styles.picker}>
+            <Picker
+              selectedValue={selectedDesignationId}
+              onValueChange={(value) => {
+                setSelectedDesignationId(value);
+                 setselectedsenior('');
+                setselectedseniorid('');
+                if(value === ""){
+                  setSelectedDesignation("");
+                  setseniors([]);
+                  return;
+                }
+                const desg = designations.find((d) => d.id === value);
+                if (desg) setSelectedDesignation(desg.name);
+                getseniorsId(desg.id);
+              
+              }}
+            >
+              <Picker.Item label="Select Designation" value="" />
+              {designations.map((desg) => (
+                <Picker.Item key={desg.id} label={desg.name} value={desg.id} />
+              ))}
+            </Picker>
+          </View>
+        </>
+      )}
+
+
+     {selectedDesignation !== '' && (
+      <>
+      <Text style={styles.label}>Senior Asigned</Text>
+      <View style={styles.picker}>
+        <Picker
+          selectedValue={selectedseniorid}
+          onValueChange={(value) => {
+            setselectedseniorid(value);
+           
+            const sen = seniors.find((s) => s.employeeId === value);
+            if (sen) {
+              setselectedsenior(sen.senior);
+            }
+          }}
+        >
+          <Picker.Item label="Senior Asigned" value="" />
+          {seniors.map((sen) => (
+            <Picker.Item
+              key={sen.employeeId}
+              label={sen.senior}
+              value={sen.employeeId}
+            />
+          ))}
+        </Picker>
+      </View>
+      </>
+       )}
+
 
       <Text style={styles.label}>Employee Type</Text>
       <TextInput
@@ -112,7 +250,6 @@ export default function StepOne({ onNext, onBack, initialData = {} }: any) {
       <TouchableOpacity onPress={pickImage} style={styles.imageButton}>
         <Text>Select Photo</Text>
       </TouchableOpacity>
-
       {avatar && <Image source={{ uri: avatar }} style={styles.image} />}
 
       <View style={styles.footer}>
@@ -150,11 +287,17 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: 'gray',
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
     height: 50,
+  },
+  picker: {
+    borderWidth: 1,
+    borderColor: 'gray',
+    borderRadius: 8,
+    marginBottom: 16,
   },
   imageButton: {
     backgroundColor: '#eee',

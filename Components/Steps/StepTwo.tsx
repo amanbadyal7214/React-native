@@ -21,7 +21,6 @@ export default function GeneralDetails({ onBack, onNext, formData }: any) {
   });
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-  // Initialize from previous step data
   useEffect(() => {
     if (formData) {
       setForm({
@@ -191,7 +190,7 @@ export default function GeneralDetails({ onBack, onNext, formData }: any) {
 
 const styles = StyleSheet.create({
   container: { padding: 20, backgroundColor: '#fff', paddingBottom: 50 },
-  title: { fontSize: 24, fontWeight: 'bold', marginTop: 10 },
+  title: { fontSize: 24, fontWeight: 'bold', },
   subtitle: { fontSize: 14, color: 'black', marginBottom: 20 },
   label: { marginVertical: 7, color: 'green', fontWeight: '500' },
   input: {
@@ -199,7 +198,7 @@ const styles = StyleSheet.create({
     padding: 10, marginBottom: 5, height: 45,
   },
   picker: {
-    height: 45,
+    height: 55,
     color: 'gray',
   },
   dateInput: {
