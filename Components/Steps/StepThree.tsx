@@ -6,6 +6,8 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  Alert,
+  ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -15,35 +17,53 @@ export default function StepThree({ onBack, onSubmit, formData }: any) {
   const [spouse, setSpouse] = useState('');
 
   const handleSubmit = () => {
-    onSubmit({ ...formData, address, pincode, spouse });
+    if (!address.trim() || !pincode.trim()) {
+      Alert.alert('Validation Error', 'Address and Pincode are required.');
+      return;
+    }
+
+    const updatedForm = {
+      ...formData,
+      address,
+      pincode,
+      spouse,
+    };
+    onSubmit(updatedForm);
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Address <Text style={{ color: 'green' }}>Details</Text></Text>
+    <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.title}>
+        Address <Text style={{ color: 'green' }}>Details</Text>
+      </Text>
       <Text style={styles.subtitle}>Complete the final step of the form</Text>
 
+      <Text style={styles.label}>Spouse Name</Text>
       <TextInput
         style={styles.input}
-        placeholder="Spouse Name"
+        placeholder="Enter spouse's name (optional)"
         value={spouse}
         onChangeText={setSpouse}
       />
+
+      <Text style={styles.label}>Address *</Text>
       <TextInput
         style={styles.input}
-        placeholder="Address"
+        placeholder="Enter address"
         value={address}
         onChangeText={setAddress}
       />
+
+      <Text style={styles.label}>Pincode *</Text>
       <TextInput
         style={styles.input}
-        placeholder="Pincode"
+        placeholder="Enter pincode"
         value={pincode}
         onChangeText={setPincode}
         keyboardType="numeric"
+        maxLength={6}
       />
 
-      {/* Footer navigation buttons */}
       <View style={styles.footer}>
         <TouchableOpacity style={styles.circleButton} onPress={onBack}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
@@ -52,20 +72,38 @@ export default function StepThree({ onBack, onSubmit, formData }: any) {
           <Ionicons name="checkmark-done" size={24} color="#fff" />
         </TouchableOpacity>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 20, paddingBottom: 80 },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 4 },
-  subtitle: { fontSize: 14, color: '#666', marginBottom: 20 },
+  container: {
+    padding: 20,
+    paddingBottom: 80,
+    backgroundColor: '#fff',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 20,
+  },
+  label: {
+    fontWeight: '500',
+    marginBottom: 6,
+    color: 'green',
+  },
   input: {
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 8,
-    padding: 10,
-    marginBottom: 12,
+    padding: 12,
+    marginBottom: 16,
+    height: 50,
   },
   footer: {
     flexDirection: 'row',
